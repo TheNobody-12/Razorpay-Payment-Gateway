@@ -2,7 +2,11 @@ import json
 from flask import Flask, request, jsonify,render_template,request,redirect,url_for,make_response
 from flask_sqlalchemy import SQLAlchemy
 import razorpay
+import pandas as pd
 
+key = pd.read_csv('rzp.csv')
+key_id = key['key_id'][0]
+key_secret = key['key_secret'][0]
 
 app = Flask(__name__)
 app.config['SECREt_KEY'] = 'PAYMENT_APP'
@@ -37,7 +41,7 @@ def index():
 def pay(id):
     user = User.query.filter_by(id=id).first()
     # print(name,email,address,amount)
-    client = razorpay.Client(auth=("TEST_KEY_ID", "TEST_KEY_SECRET"))
+    client = razorpay.Client(auth=(key_id,key_secret))
     DATA = {
         "amount": int(user.amount*100),
         "currency": "INR",
@@ -62,6 +66,8 @@ def success():
 
 
 if __name__ == '__main__':
-    app.debug = True
+    from waitress import serve
+    # app.debug = True
     db.create_all()
-    app.run(debug=True)
+    # app.run(debug=True)
+    serve(app, host="0.0.0.0", port=8080)
